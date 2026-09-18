@@ -299,6 +299,37 @@ function applyLook() {
   $("f-top").checked = cfg.onTop;
 }
 
+/* 이번 설정에서 나올 수 있는 가장 긴 읽을거리.
+
+   폭이 결과를 알려주면 안 된다. 결과 글자는 굴리는 동안 opacity 0 으로
+   숨기지만 자리는 그대로 차지한다 ─ 숨긴 게 아니라 안 보이게만 한 것이다.
+   그래서 '대실패' 가 뜰 판은 주사위가 멈추기도 전에 알약이 길어져 있었고,
+   길이만 보고도 무엇이 뜰지 알 수 있었다. 눈을 가려 놓고 폭으로 흘린 셈이다.
+
+   그래서 폭은 실제로 나온 눈이 아니라 '나올 수 있었던 것 중 가장 긴 것' 으로
+   잡는다. 어떤 눈이 나오든 알약은 같은 길이다. 굴리기 전과도 같다. */
+function widestRead(sides) {
+  const goal = cfg.target ? "/ " + goalText(sides, cfg.target) : "";
+  // 대성공·대실패가 가능한 판이면 세 글자만큼 자리를 잡아 둔다.
+  const big = (cfg.crit === "nat" && (sides === 20 || sides === 100))
+           || (cfg.crit === "num" && cfg.target);
+  const verdict = big ? "대실패" : (cfg.target ? "실패" : "");
+  if (sides === 100) return { val: "100", goal, verdict };
+
+  // 합이 닿을 수 있는 양 끝. 자릿수는 가운데가 아니라 끝에서 가장 길다.
+  const lo = 1 + cfg.extra.length + cfg.mod;          // 눈도 수정치 주사위도 최소
+  const hi = sides + cfg.extra.reduce((a, n) => a + n, 0) + cfg.mod;
+  const capped = cfg.floor !== null && lo < cfg.floor;
+  const ends = [String(capped ? cfg.floor : lo), String(hi)];
+  const val = ends[1].length >= ends[0].length ? ends[1] : ends[0];
+
+  const parts = [String(sides), ...cfg.extra.map(String)];
+  if (cfg.mod) parts.push((cfg.mod > 0 ? "+" : "") + cfg.mod);
+  const sum = parts.join(" + ").replace("+ -", "- ") + (capped ? ` → ${cfg.floor}` : "");
+  const breakdown = parts.length > 1 ? `(${sum})` : "";
+  return { val, goal: [breakdown, goal].filter(Boolean).join(" "), verdict };
+}
+
 /* 창을 내용에 맞춘다. 판정 이름이 길면 알약도 길어져야 하고, 짧으면
    빈 자리가 남으면 안 된다.
    다음 프레임에 재는 이유: 방금 바꾼 글자의 너비는 아직 반영되지 않았다.
@@ -312,8 +343,17 @@ function fitWindow() {
   requestAnimationFrame(() => {
     const pill = $("pill");
     const open = !$("panel").hidden;
+
+    // 결과가 폭으로 새지 않게, 잴 때만 '가장 긴 경우' 를 끼워 넣는다.
+    const slots = [$("val"), $("goal"), $("verdict")];
+    const keep = slots.map((el) => el.textContent);
+    const wide = widestRead(cfg.sides);
+    slots[0].textContent = wide.val;
+    slots[1].textContent = wide.goal;
+    slots[2].textContent = wide.verdict;
     const pw = Math.ceil(pill.offsetWidth);
     const ph = Math.ceil(pill.offsetHeight);
+    slots.forEach((el, i) => { el.textContent = keep[i]; });
     const w = Math.max(open ? PANEL_W + MARGIN_X * 2 : 0, MIN_W, pw + MARGIN_X * 2);
     // 위쪽 여백은 언제나 남긴다(주사위가 튄다). 아래쪽은 패널이 대신 채운다.
     const h = MARGIN_Y + ph + (open ? 8 + PANEL_H + 10 : MARGIN_Y);
