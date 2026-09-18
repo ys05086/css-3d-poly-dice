@@ -344,16 +344,21 @@ function fitWindow() {
     const pill = $("pill");
     const open = !$("panel").hidden;
 
-    // 결과가 폭으로 새지 않게, 잴 때만 '가장 긴 경우' 를 끼워 넣는다.
+    /* 결과가 폭으로 새지 않게, 잴 때만 '가장 긴 경우' 를 끼워 넣는다.
+       그리고 잰 폭을 알약에 못박는다 ─ 창만 고정하면 소용이 없다.
+       눈에 보이는 건 창이 아니라 알약이고, 알약은 제 내용만큼만 차지하므로
+       창이 넓어도 캡슐은 결과에 따라 줄었다 늘었다 한다. */
     const slots = [$("val"), $("goal"), $("verdict")];
     const keep = slots.map((el) => el.textContent);
     const wide = widestRead(cfg.sides);
     slots[0].textContent = wide.val;
     slots[1].textContent = wide.goal;
     slots[2].textContent = wide.verdict;
+    pill.style.width = "";                      // 잴 때는 내용만큼 부풀게 둔다
     const pw = Math.ceil(pill.offsetWidth);
     const ph = Math.ceil(pill.offsetHeight);
     slots.forEach((el, i) => { el.textContent = keep[i]; });
+    pill.style.width = pw + "px";               // 이제 무엇이 뜨든 이 길이다
     const w = Math.max(open ? PANEL_W + MARGIN_X * 2 : 0, MIN_W, pw + MARGIN_X * 2);
     // 위쪽 여백은 언제나 남긴다(주사위가 튄다). 아래쪽은 패널이 대신 채운다.
     const h = MARGIN_Y + ph + (open ? 8 + PANEL_H + 10 : MARGIN_Y);
