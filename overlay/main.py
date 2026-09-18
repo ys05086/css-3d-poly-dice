@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import ctypes
 import ctypes.wintypes as wt
+import os
 import sys
 import threading
 import time
@@ -32,6 +33,12 @@ def _root() -> Path:
 
 ROOT = _root()
 PAGE = ROOT / "web" / "overlay.html"
+
+# 설정과 굴린 기록이 사는 곳. 묶어 낸 프로그램은 제 폴더에 쓸 수 없고(읽기
+# 전용인 자리에 깔릴 수 있다) 임시 폴더는 껐다 켜면 사라지므로, 사용자
+# 몫으로 잡힌 자리에 둔다. pywebview 의 기본값(%APPDATA%\pywebview)은
+# 이 PC 의 모든 pywebview 앱이 나눠 쓰는 자리라 쓰지 않는다.
+STORE = Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "주사위"
 
 # 이미 떠 있는지 알아보고, 떠 있으면 불러내는 데 쓰는 이름들.
 # Local\ 은 이 로그온 세션 안에서만 통한다는 뜻이다.
@@ -383,7 +390,15 @@ def main() -> None:
 
     window.events.closing += on_closing
     window.events.shown += on_shown
-    webview.start(gui="edgechromium" if sys.platform == "win32" else None)
+    webview.start(
+        gui="edgechromium" if sys.platform == "win32" else None,
+        # 설정과 굴린 기록은 화면 쪽 localStorage 에 산다. 이 둘을 주지 않으면
+        # pywebview 는 private_mode 가 기본으로 켜져 있어서 뜰 때마다 임시
+        # 폴더를 새로 파고, 끄는 순간 다 사라진다 ─ '기록' 칸이 매번 비어
+        # 있는 이유가 그것이었다.
+        private_mode=False,
+        storage_path=str(STORE),
+    )
 
     stop.set()
     kernel32.CloseHandle(held)

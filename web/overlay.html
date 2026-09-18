@@ -41,13 +41,25 @@
       <input id="f-target" type="number" min="1" max="100" placeholder="DC"></label>
     <label class="row"><span>수정치</span>
       <input id="f-mod" type="number" min="-20" max="20" value="0"></label>
+    <label class="row"><span>하한</span>
+      <input id="f-floor" type="number" min="-20" max="20" placeholder="없음"></label>
+
+    <div class="lab">대성공·대실패</div>
+    <div id="pick-crit" class="picks"></div>
 
     <div class="lab">수정치 주사위</div>
     <div id="pick-extra" class="picks"></div>
     <p class="note">
       눌러서 더하고, 오른쪽 단추로 뺍니다. 굴린 값이 합에 더해집니다.<br>
       목표를 비우면 판정 없이 눈만 보여줍니다.<br>
-      d100 은 백분율이라 <b>낮을수록</b> 성공(≤ 목표%)이고 수정치 주사위를 받지 않습니다.
+      <b>눈금</b>은 주사위 눈이 정합니다 — 수정치가 아무리 커도 d20 이 1이면
+      대실패입니다(D&amp;D 공격 굴림).
+      <b>숫자</b>는 목표와의 차이가 정합니다 — 10 이상 벌어지면 대성공·대실패이고,
+      목표가 없으면 아무것도 정하지 않습니다.<br>
+      <b>하한</b>보다 낮은 합은 하한으로 올립니다. 판정도 올린 값으로 합니다 ─
+      그래서 <b>숫자</b>와 같이 쓰면 합이 목표에서 멀어질 수 없어
+      대실패가 안 뜰 수 있습니다.<br>
+      d100 은 백분율이라 <b>낮을수록</b> 성공(≤ 목표%)이고 수정치도 하한도 받지 않습니다.
       나머지는 <b>높을수록</b> 성공(≥ DC)입니다.
     </p>
   </section>

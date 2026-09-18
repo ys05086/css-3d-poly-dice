@@ -23,6 +23,8 @@ const DEFAULTS = {
   label: "",
   target: 0,
   mod: 0,
+  crit: "nat",        // 대성공·대실패를 무엇이 정하는가. judge() 를 본다.
+  floor: 1,           // 합의 하한. null 이면 없음.
   material: "mat-onyx",
   size: 42,
   alpha: 94,
@@ -33,6 +35,12 @@ const MATERIALS = [
   ["mat-ivory", "상아"], ["mat-neon", "네온"], ["mat-oak", "참나무"],
 ];
 const PICKABLE = [4, 6, 8, 10, 12, 20, 100];
+// 숫자 판정에서 대성공·대실패가 갈리는 차이. judge() 를 본다.
+const CRIT_EDGE = 10;
+const CRIT_MODES = [
+  ["nat", "눈금", "주사위 눈이 정한다 — d20 의 20 과 1"],
+  ["num", "숫자", `목표와 ${CRIT_EDGE} 이상 벌어지면`],
+];
 const LOG_MAX = 300;
 
 /* 창 여백. 위아래를 크게 잡는 이유는 하나다 ─ 주사위가 튀어 오를 자리.
@@ -41,7 +49,7 @@ const LOG_MAX = 300;
    ─ fitWindow 가 알약이 실제로 있는 사각형을 함께 넘겨주기 때문이다. */
 const MARGIN_X = 10;
 const MARGIN_Y = 34;
-const PANEL_H = 400;
+const PANEL_H = 460;
 // 설정 패널은 알약이 넓어져도 따라 늘어나지 않는다. overlay.css 와 같은 값.
 const PANEL_W = 360;
 const MIN_W = 180;
@@ -82,15 +90,31 @@ function goalText(sides, target) {
    나머지는 d20+수정치가 DC 를 넘어야 하니 **높을수록** 좋다.
 
    헷갈리기 쉬워서 화면에도 부등호를 함께 적는다. 목표가 없으면
-   판정하지 않고 눈만 보여준다. */
-function judge(sides, value, total, target) {
-  if (sides === 20 && value === 20) return { kind: "crit", text: "대성공" };
-  if (sides === 20 && value === 1) return { kind: "fumble", text: "대실패" };
-  if (sides === 100 && value <= 5) return { kind: "crit", text: "대성공" };
-  if (sides === 100 && value >= 96) return { kind: "fumble", text: "대실패" };
+   판정하지 않고 눈만 보여준다.
+
+   대성공·대실패를 무엇이 정하는가는 판마다 다르므로 설정으로 뺐다.
+
+     눈금 ─ 주사위 눈이 정한다. d20 의 20 과 1, d100 의 05 이하와 96 이상.
+            수정치가 아무리 커도 눈이 1이면 대실패다. D&D 의 공격 굴림이
+            그렇다(자연 1은 무조건 빗나간다). 목표가 없어도 뜬다.
+     숫자 ─ 합이 목표에서 얼마나 떨어졌는지가 정한다. CRIT_EDGE 만큼
+            넘기면 대성공, 그만큼 모자라면 대실패. 패스파인더 2판 식이다.
+            눈 하나로 판이 뒤집히지 않는 대신 목표가 있어야 한다. */
+function judge(sides, value, total, target, mode) {
+  if (mode === "nat") {
+    if (sides === 20 && value === 20) return { kind: "crit", text: "대성공" };
+    if (sides === 20 && value === 1) return { kind: "fumble", text: "대실패" };
+    if (sides === 100 && value <= 5) return { kind: "crit", text: "대성공" };
+    if (sides === 100 && value >= 96) return { kind: "fumble", text: "대실패" };
+  }
   if (!target) return null;
-  const ok = sides === 100 ? value <= target : total >= target;
-  return ok ? { kind: "ok", text: "성공" } : { kind: "fail", text: "실패" };
+  // 목표를 얼마나 넘겼는가. d100 은 낮을수록 좋으니 부등호가 뒤집힌다.
+  const by = sides === 100 ? target - value : total - target;
+  if (mode === "num") {
+    if (by >= CRIT_EDGE) return { kind: "crit", text: "대성공" };
+    if (by <= -CRIT_EDGE) return { kind: "fumble", text: "대실패" };
+  }
+  return by >= 0 ? { kind: "ok", text: "성공" } : { kind: "fail", text: "실패" };
 }
 
 let rollTimer = null;
@@ -102,8 +126,15 @@ function roll() {
   // 55% 판정에 d6 을 얹으면 그건 더 이상 백분율이 아니다.
   const extras = sides === 100 ? [] : cfg.extra.map((n) => ({ sides: n, value: pick(n) }));
   const bonus = extras.reduce((a, e) => a + e.value, 0);
-  const total = sides === 100 ? value : value + bonus + cfg.mod;
-  const verdict = judge(sides, value, total, cfg.target);
+  const raw = sides === 100 ? value : value + bonus + cfg.mod;
+  /* 하한. 수정치가 크게 마이너스면 합이 음수로 내려가는데, 판정 결과로
+     -5 를 보는 건 눈에 거슬린다. 판정도 올린 값으로 한다 ─ 보이는 숫자와
+     판정이 다르면 그게 더 나쁘다.
+     d100 은 백분율이라 손대지 않는다. 3% 굴림을 하한으로 올리면 그건 더 이상
+     백분율이 아니다. */
+  const capped = sides !== 100 && cfg.floor !== null && raw < cfg.floor;
+  const total = capped ? cfg.floor : raw;
+  const verdict = judge(sides, value, total, cfg.target, cfg.crit);
 
   const pill = $("pill");
   pill.className = "pill rolling";
@@ -131,7 +162,9 @@ function roll() {
      실제로는 눈금이 1이었다. 내역을 같이 두면 의심할 여지가 없다. */
   const parts = [String(value), ...extras.map((e) => String(e.value))];
   if (cfg.mod) parts.push((cfg.mod > 0 ? "+" : "") + cfg.mod);
-  const breakdown = (parts.length > 1 && sides !== 100) ? `(${parts.join(" + ").replace("+ -", "- ")})` : "";
+  // 하한이 물었으면 화살표로 밝힌다. 안 그러면 내역과 합이 안 맞아 보인다.
+  const sum = parts.join(" + ").replace("+ -", "- ") + (capped ? ` → ${total}` : "");
+  const breakdown = (parts.length > 1 && sides !== 100) ? `(${sum})` : "";
   $("goal").textContent = [breakdown, cfg.target ? "/ " + goalText(sides, cfg.target) : ""]
     .filter(Boolean).join(" ");
   $("verdict").textContent = verdict ? verdict.text : "";
@@ -212,6 +245,18 @@ function renderPicks() {
   }
   const after = () => { save(); renderPicks(); renderIdle(); };
 
+  const crit = $("pick-crit");
+  crit.innerHTML = "";
+  for (const [key, name, tip] of CRIT_MODES) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = name;
+    b.title = tip;
+    b.className = cfg.crit === key ? "on" : "";
+    b.onclick = () => { cfg.crit = key; save(); renderPicks(); };
+    crit.append(b);
+  }
+
   const mat = $("pick-mat");
   mat.innerHTML = "";
   for (const [key, name] of MATERIALS) {
@@ -250,6 +295,7 @@ function applyLook() {
   $("f-label").value = cfg.label;
   $("f-target").value = cfg.target || "";
   $("f-mod").value = cfg.mod;
+  $("f-floor").value = cfg.floor === null ? "" : cfg.floor;
   $("f-top").checked = cfg.onTop;
 }
 
@@ -374,6 +420,12 @@ function wire() {
   $("f-label").oninput = (e) => { cfg.label = e.target.value.trim(); save(); renderIdle(); };
   $("f-target").oninput = (e) => { cfg.target = Number(e.target.value) || 0; save(); renderIdle(); };
   $("f-mod").oninput = (e) => { cfg.mod = Number(e.target.value) || 0; save(); };
+  // 비워 두면 하한 없음. 0 은 0 이지 '없음' 이 아니므로 Number(..)||0 을 쓰면 안 된다.
+  $("f-floor").oninput = (e) => {
+    const v = e.target.value.trim();
+    cfg.floor = v === "" || Number.isNaN(Number(v)) ? null : Number(v);
+    save();
+  };
   $("f-size").oninput = (e) => {
     cfg.size = Number(e.target.value); applyLook(); renderIdle(); save();
   };
