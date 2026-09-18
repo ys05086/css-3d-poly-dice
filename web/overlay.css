@@ -180,6 +180,17 @@ body.open { padding-bottom: 10px; }
 .row b { font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; }
 .row.sw input { accent-color: #7c5cff; width: 15px; height: 15px; }
 .note { font-size: 11px; color: var(--dim); line-height: 1.6; }
+/* 골라 둔 규칙이 지금 설정으로는 돌지 않을 때. 조용히 멎는 것보다 낫다. */
+.warn {
+  font-size: 11px; line-height: 1.55; margin: -6px 0 14px;
+  padding: 7px 10px; border-radius: 8px;
+  background: rgba(242, 207, 121, .10);
+  border: 1px solid rgba(242, 207, 121, .32);
+  color: #f0d79a;
+}
+.warn b { color: #ffe9b8; }
+/* 값 위에 굴림 근거가 얹혀 있을 때만 손 모양으로 알린다. */
+.val[title]:not([title=""]) { cursor: help; }
 .note b { color: var(--text); font-weight: 600; }
 
 .mini {

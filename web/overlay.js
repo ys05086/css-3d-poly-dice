@@ -127,14 +127,19 @@ function roll() {
   const extras = sides === 100 ? [] : cfg.extra.map((n) => ({ sides: n, value: pick(n) }));
   const bonus = extras.reduce((a, e) => a + e.value, 0);
   const raw = sides === 100 ? value : value + bonus + cfg.mod;
-  /* 하한. 수정치가 크게 마이너스면 합이 음수로 내려가는데, 판정 결과로
-     -5 를 보는 건 눈에 거슬린다. 판정도 올린 값으로 한다 ─ 보이는 숫자와
-     판정이 다르면 그게 더 나쁘다.
+  /* 하한은 눈에 거슬리는 음수를 가리는 것일 뿐, 규칙이 아니다.
+
+     한때 판정도 올린 값으로 했는데 그게 틀렸다. 하한 1 에 DC 10 이면 합이
+     목표에서 10 만큼 멀어질 수가 없어서, '숫자' 기준의 대실패가 영영 안
+     떴다. 켜 둔 규칙이 조용히 멎은 셈이다.
+     보이는 숫자와 판정이 어긋나는 건 감수한다 ─ 근거는 숫자 위에 올려놓으면
+     나오고, 거기 원래 합이 그대로 적혀 있다.
+
      d100 은 백분율이라 손대지 않는다. 3% 굴림을 하한으로 올리면 그건 더 이상
      백분율이 아니다. */
   const capped = sides !== 100 && cfg.floor !== null && raw < cfg.floor;
   const total = capped ? cfg.floor : raw;
-  const verdict = judge(sides, value, total, cfg.target, cfg.crit);
+  const verdict = judge(sides, value, raw, cfg.target, cfg.crit);
 
   const pill = $("pill");
   pill.className = "pill rolling";
@@ -154,26 +159,35 @@ function roll() {
 
   $("lb").textContent = cfg.label || "";
   $("val").textContent = total;
-  /* 합이 어떻게 나왔는지, 그리고 무엇을 넘겨야 했는지 ─ 둘 다 적는다.
+  /* 합이 어떻게 나왔는지는 숫자 위에 얹어 둔다.
 
-     한때 목표가 있으면 내역을 지웠는데, 그러면 수정치가 큰 판에서 읽을 수가
-     없다. 대성공·대실패는 합이 아니라 눈금으로 가르므로(d20 의 20 과 1),
-     '-5 / ≥ DC 10 대실패' 만 보이면 수정치 탓에 대실패가 난 것처럼 읽힌다.
-     실제로는 눈금이 1이었다. 내역을 같이 두면 의심할 여지가 없다. */
+     한때 괄호로 알약에 적었는데('-5 (1 - 6) / ≥ DC 10'), 수정치 주사위까지
+     붙으면 알약이 감당이 안 되게 길어진다. 그렇다고 지우면 안 된다 ─
+     대성공·대실패는 합이 아니라 눈금으로 가르므로(d20 의 20 과 1),
+     '-5 대실패' 만 보이면 수정치 탓에 대실패가 난 것처럼 읽힌다.
+     그래서 평소에는 값만 툭 던지고, 근거는 올려놓으면 나온다.
+
+     제목 풍선을 쓰는 이유: 창이 알약 모양으로 오려져 있어서(main.py 의
+     cut_to_shape) 화면 안에 그린 풍선은 알약 밖으로 나가는 순간 잘린다.
+     제목 풍선은 운영체제가 제 창에 그리므로 잘리지 않는다. */
+  // 부호는 join 이 붙인다. 여기서 '+' 를 또 붙이면 '14 + +10' 이 된다.
   const parts = [String(value), ...extras.map((e) => String(e.value))];
-  if (cfg.mod) parts.push((cfg.mod > 0 ? "+" : "") + cfg.mod);
-  // 하한이 물었으면 화살표로 밝힌다. 안 그러면 내역과 합이 안 맞아 보인다.
-  const sum = parts.join(" + ").replace("+ -", "- ") + (capped ? ` → ${total}` : "");
-  const breakdown = (parts.length > 1 && sides !== 100) ? `(${sum})` : "";
-  $("goal").textContent = [breakdown, cfg.target ? "/ " + goalText(sides, cfg.target) : ""]
-    .filter(Boolean).join(" ");
+  if (cfg.mod) parts.push(String(cfg.mod));
+  const note = (parts.length > 1 && sides !== 100)
+    ? `${parts.join(" + ").replace(/\+ -/g, "- ")} = ${raw}` +
+      (capped ? ` → 하한 ${total}` : "")       // 하한이 물었으면 거기도 밝힌다
+    : "";
+  $("goal").textContent = cfg.target ? "/ " + goalText(sides, cfg.target) : "";
   $("verdict").textContent = verdict ? verdict.text : "";
+  // 굴리는 동안은 근거도 없다. 올려놓으면 보이는 것도 미리 새는 것이다.
+  $("val").title = "";
   fitWindow();
 
   // 주사위가 멈춘 뒤에야 결과가 뜬다. 미리 새면 굴리는 의미가 없다.
   const until = Math.max(1000, ...[...tray.children].map((d) => Number(d.dataset.ms) || 0));
   rollTimer = setTimeout(() => {
     pill.className = "pill" + (verdict ? " " + verdict.kind : "");
+    $("val").title = note;
   }, until);
 
   log.unshift({
@@ -211,6 +225,7 @@ function renderIdle() {
   $("goal").textContent = goalText(cfg.sides, cfg.target)
     ? "/ " + goalText(cfg.sides, cfg.target) : "";
   $("verdict").textContent = "";
+  $("val").title = "";
   fitWindow();
 }
 
@@ -253,9 +268,11 @@ function renderPicks() {
     b.textContent = name;
     b.title = tip;
     b.className = cfg.crit === key ? "on" : "";
-    b.onclick = () => { cfg.crit = key; save(); renderPicks(); };
+    b.onclick = () => { cfg.crit = key; save(); renderPicks(); renderIdle(); };
     crit.append(b);
   }
+  // '숫자' 인데 목표가 없으면 아무것도 안 뜬다. 고장처럼 보이므로 말해 준다.
+  $("crit-warn").hidden = !(cfg.crit === "num" && !cfg.target);
 
   const mat = $("pick-mat");
   mat.innerHTML = "";
@@ -321,13 +338,7 @@ function widestRead(sides) {
   const hi = sides + cfg.extra.reduce((a, n) => a + n, 0) + cfg.mod;
   const capped = cfg.floor !== null && lo < cfg.floor;
   const ends = [String(capped ? cfg.floor : lo), String(hi)];
-  const val = ends[1].length >= ends[0].length ? ends[1] : ends[0];
-
-  const parts = [String(sides), ...cfg.extra.map(String)];
-  if (cfg.mod) parts.push((cfg.mod > 0 ? "+" : "") + cfg.mod);
-  const sum = parts.join(" + ").replace("+ -", "- ") + (capped ? ` → ${cfg.floor}` : "");
-  const breakdown = parts.length > 1 ? `(${sum})` : "";
-  return { val, goal: [breakdown, goal].filter(Boolean).join(" "), verdict };
+  return { val: ends[1].length >= ends[0].length ? ends[1] : ends[0], goal, verdict };
 }
 
 /* 창을 내용에 맞춘다. 판정 이름이 길면 알약도 길어져야 하고, 짧으면
@@ -463,7 +474,11 @@ function wire() {
   });
 
   $("f-label").oninput = (e) => { cfg.label = e.target.value.trim(); save(); renderIdle(); };
-  $("f-target").oninput = (e) => { cfg.target = Number(e.target.value) || 0; save(); renderIdle(); };
+  $("f-target").oninput = (e) => {
+    cfg.target = Number(e.target.value) || 0;
+    save(); renderIdle();
+    $("crit-warn").hidden = !(cfg.crit === "num" && !cfg.target);
+  };
   $("f-mod").oninput = (e) => { cfg.mod = Number(e.target.value) || 0; save(); };
   // 비워 두면 하한 없음. 0 은 0 이지 '없음' 이 아니므로 Number(..)||0 을 쓰면 안 된다.
   $("f-floor").oninput = (e) => {
