@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>주사위</title>
+
+<!-- 주사위에 필요한 파일은 이 둘뿐이다. -->
+<link rel="stylesheet" href="dice.css">
+<script src="dice.js" defer></script>
+
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0; padding: 28px 18px 60px;
+    background: #0e0e14; color: #e6e6ef;
+    font: 15px/1.6 "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  }
+  h1 { font-size: 19px; margin: 0 0 4px; }
+  p.lead { color: #9a9ab0; font-size: 13px; margin: 0 0 22px; }
+  code { background: #1e1e2a; padding: 1px 5px; border-radius: 5px; font-size: 12px; }
+  h2 { font-size: 13px; color: #9a9ab0; font-weight: 600; margin: 26px 0 10px;
+       text-transform: uppercase; letter-spacing: .05em; }
+  .row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+  .cell span { font-size: 11px; color: #8a8aa0; }
+  .tray { display: inline-flex; gap: 7px; align-items: center; }
+  button {
+    background: #22222e; color: #ddd; border: 1px solid #3a3a52;
+    border-radius: 9px; padding: 8px 16px; font-size: 13px; cursor: pointer;
+  }
+  button:hover { background: #2c2c3c; }
+  .bar { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>주사위</h1>
+<p class="lead">
+  <code>dice.css</code> + <code>dice.js</code> 둘만 불러온 페이지입니다.
+  다른 코드는 들어 있지 않습니다.
+</p>
+
+<div class="bar">
+  <button id="roll">다시 굴리기</button>
+  <label style="font-size:12px;color:#8a8aa0">
+    <input type="checkbox" id="loop" checked> 3초마다 자동
+  </label>
+</div>
+
+<h2>재질</h2>
+<div class="row" id="mats"></div>
+
+<h2>종류</h2>
+<div class="row" id="kinds"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const cell = (node, label) => {
+  const box = document.createElement("div");
+  box.className = "cell";
+  const tray = document.createElement("span");
+  tray.className = "tray";
+  for (const n of [].concat(node)) tray.append(n);
+  const cap = document.createElement("span");
+  cap.textContent = label;
+  box.append(tray, cap);
+  return box;
+};
+const d20 = () => 1 + Math.floor(Math.random() * 20);
+const d100 = () => 1 + Math.floor(Math.random() * 100);
+
+function draw() {
+  const mats = $("mats"), kinds = $("kinds");
+  mats.innerHTML = kinds.innerHTML = "";
+
+  for (const m of Dice.MATERIALS) {
+    mats.append(cell(Dice.d20(d20(), { size: 74, material: m }), m.replace("mat-", "")));
+  }
+
+  // 표준 세트 여섯 알. 면 수만 넘기면 Dice.of 가 알아서 고른다.
+  const NAMES = { 4: "정사면체", 6: "육면체", 8: "정팔면체",
+                  10: "십면체", 12: "정십이면체", 20: "정이십면체" };
+  for (const n of Dice.SIDES) {
+    const v = n === 6 ? "＋" : 1 + Math.floor(Math.random() * n) - (n === 10 ? 1 : 0);
+    kinds.append(cell(Dice.of(n, v, { size: 70 }), `d${n} · ${NAMES[n]}`));
+  }
+
+  const roll = d100();
+  kinds.append(
+    cell(Dice.percentile(roll, { size: 58 }), `d100 = ${roll} · 십면체 두 알`),
+    cell([Dice.d6("＋"), Dice.d6("０"), Dice.d6("－"), Dice.d6("＋")], "4dF · 퍼지 주사위"),
+    cell(Dice.d20(20, { size: 70, material: "mat-onyx" }), "tone-good / tone-bad"),
+  );
+  // 결과 색은 쓰는 쪽이 붙인다. dice.js 는 이 클래스를 건드리지 않는다.
+  const last = kinds.lastElementChild.querySelectorAll(".poly-die");
+  setTimeout(() => last.forEach((d) => d.classList.add("tone-good")), 1300);
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  draw();
+  $("roll").onclick = draw;
+  let timer = setInterval(draw, 3000);
+  $("loop").onchange = (e) => {
+    clearInterval(timer);
+    if (e.target.checked) timer = setInterval(draw, 3000);
+  };
+});
+</script>
+</body>
+</html>

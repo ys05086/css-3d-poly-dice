@@ -1,0 +1,13 @@
+# 오버레이를 프로그램으로 묶은 결과. overlay/build.py 로 언제든 다시 만든다.
+build/
+dist/
+
+# 파이썬
+__pycache__/
+*.py[cod]
+.venv/
+
+# 기타
+*.log
+Thumbs.db
+.DS_Store

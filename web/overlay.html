@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>주사위</title>
+<link rel="stylesheet" href="dice.css">
+<link rel="stylesheet" href="overlay.css">
+</head>
+<body>
+
+<!-- 오버레이 전체가 이 알약 하나다. 창틀이 없고 이게 곧 창이다.
+     어디를 잡아도 끌린다. 끌지 않고 톡 누르면 그게 굴림이다 ─ 어느 쪽인지는
+     손가락이 움직인 거리로 가른다(overlay.js 의 DRAG_SLOP). -->
+<div id="pill" class="pill">
+  <span id="tray" class="tray"></span>
+
+  <span class="read">
+    <span id="lb" class="lb"></span>
+    <span id="val" class="val">—</span>
+    <span id="goal" class="goal"></span>
+    <span id="verdict" class="verdict"></span>
+  </span>
+
+  <button id="btn-cfg" class="knob" title="설정">⚙</button>
+</div>
+
+<!-- 설정. 열면 창이 늘어난다. -->
+<div id="panel" class="panel" hidden>
+  <div class="tabs">
+    <button class="tab active" data-tab="dice">주사위</button>
+    <button class="tab" data-tab="look">모양</button>
+    <button class="tab" data-tab="log">기록</button>
+  </div>
+
+  <section id="p-dice" class="pane">
+    <div class="lab">굴릴 주사위</div>
+    <div id="pick-dice" class="picks"></div>
+    <label class="row"><span>판정 이름</span>
+      <input id="f-label" placeholder="지혜" spellcheck="false"></label>
+    <label class="row"><span>목표</span>
+      <input id="f-target" type="number" min="1" max="100" placeholder="DC"></label>
+    <label class="row"><span>수정치</span>
+      <input id="f-mod" type="number" min="-20" max="20" value="0"></label>
+
+    <div class="lab">수정치 주사위</div>
+    <div id="pick-extra" class="picks"></div>
+    <p class="note">
+      눌러서 더하고, 오른쪽 단추로 뺍니다. 굴린 값이 합에 더해집니다.<br>
+      목표를 비우면 판정 없이 눈만 보여줍니다.<br>
+      d100 은 백분율이라 <b>낮을수록</b> 성공(≤ 목표%)이고 수정치 주사위를 받지 않습니다.
+      나머지는 <b>높을수록</b> 성공(≥ DC)입니다.
+    </p>
+  </section>
+
+  <section id="p-look" class="pane" hidden>
+    <div class="lab">재질</div>
+    <div id="pick-mat" class="picks"></div>
+    <label class="row"><span>크기</span>
+      <input id="f-size" type="range" min="30" max="72" step="2"><b id="n-size"></b></label>
+    <label class="row"><span>불투명도</span>
+      <input id="f-alpha" type="range" min="30" max="100" step="5"><b id="n-alpha"></b></label>
+    <label class="row sw"><span>항상 위에</span>
+      <input id="f-top" type="checkbox" checked></label>
+  </section>
+
+  <section id="p-log" class="pane" hidden>
+    <div class="lab">굴린 기록<button id="btn-clear" class="mini">비우기</button></div>
+    <div id="log" class="log"></div>
+  </section>
+
+  <div class="foot">
+    <span class="hint">1·2 키로도 굴립니다 · Esc 로 숨김</span>
+    <button id="btn-quit" class="mini danger">종료</button>
+  </div>
+</div>
+
+<script src="dice.js"></script>
+<script src="overlay.js"></script>
+</body>
+</html>
