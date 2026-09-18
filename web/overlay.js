@@ -183,21 +183,28 @@ function roll() {
   $("val").title = "";
   fitWindow();
 
-  // 주사위가 멈춘 뒤에야 결과가 뜬다. 미리 새면 굴리는 의미가 없다.
-  const until = Math.max(1000, ...[...tray.children].map((d) => Number(d.dataset.ms) || 0));
-  rollTimer = setTimeout(() => {
-    pill.className = "pill" + (verdict ? " " + verdict.kind : "");
-    $("val").title = note;
-  }, until);
-
-  log.unshift({
+  const entry = {
     at: Date.now(), sides, roll: value, total,
     extra: extras.map((e) => e.value),
     label: cfg.label, target: cfg.target,
     kind: verdict ? verdict.kind : "", text: verdict ? verdict.text : "",
-  });
-  log = log.slice(0, LOG_MAX);
-  save();
+  };
+
+  /* 주사위가 멈춘 뒤에야 결과가 뜬다. 미리 새면 굴리는 의미가 없다.
+
+     기록도 여기서 남긴다. 누르는 순간 남기면, 멈추기 전에 또 누를 때마다
+     화면에는 안 뜬 굴림이 기록에만 쌓인다 ─ 위의 clearTimeout 이 앞선
+     굴림의 공개를 취소하기 때문이다. 결과를 못 본 굴림은 없던 일이어야
+     한다. 공중에서 주사위를 다시 집은 셈이다. */
+  const until = Math.max(1000, ...[...tray.children].map((d) => Number(d.dataset.ms) || 0));
+  rollTimer = setTimeout(() => {
+    pill.className = "pill" + (verdict ? " " + verdict.kind : "");
+    $("val").title = note;
+    log.unshift(entry);
+    log = log.slice(0, LOG_MAX);
+    save();
+    if (!$("panel").hidden && !$("p-log").hidden) renderLog();   // 보고 있으면 바로
+  }, until);
 }
 
 /* ── 그리기 ───────────────────────────────────────────── */
