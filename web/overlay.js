@@ -123,11 +123,17 @@ function roll() {
 
   $("lb").textContent = cfg.label || "";
   $("val").textContent = total;
-  // 합이 어떻게 나왔는지. 목표가 있으면 목표를 우선해 보여준다.
+  /* 합이 어떻게 나왔는지, 그리고 무엇을 넘겨야 했는지 ─ 둘 다 적는다.
+
+     한때 목표가 있으면 내역을 지웠는데, 그러면 수정치가 큰 판에서 읽을 수가
+     없다. 대성공·대실패는 합이 아니라 눈금으로 가르므로(d20 의 20 과 1),
+     '-5 / ≥ DC 10 대실패' 만 보이면 수정치 탓에 대실패가 난 것처럼 읽힌다.
+     실제로는 눈금이 1이었다. 내역을 같이 두면 의심할 여지가 없다. */
   const parts = [String(value), ...extras.map((e) => String(e.value))];
   if (cfg.mod) parts.push((cfg.mod > 0 ? "+" : "") + cfg.mod);
   const breakdown = (parts.length > 1 && sides !== 100) ? `(${parts.join(" + ").replace("+ -", "- ")})` : "";
-  $("goal").textContent = cfg.target ? "/ " + goalText(sides, cfg.target) : breakdown;
+  $("goal").textContent = [breakdown, cfg.target ? "/ " + goalText(sides, cfg.target) : ""]
+    .filter(Boolean).join(" ");
   $("verdict").textContent = verdict ? verdict.text : "";
   fitWindow();
 
