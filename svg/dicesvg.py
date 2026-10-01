@@ -1,17 +1,17 @@
 """주사위를 SVG 한 장으로 그린다. 자바스크립트 없이 굴러간다.
 
-<img> 로 불린 SVG 안에서는 스크립트가 차단되고 foreignObject 도 렌더되지
-않는다. CSS 3D(transform-style: preserve-3d)도 SVG 요소에는 안 먹는다.
-남는 것은 SMIL(<animate>) 뿐이다.
+<img>로 불러온 SVG 안에서는 스크립트가 차단되고 foreignObject도 렌더링되지
+않는다. CSS 3D(transform-style: preserve-3d)도 SVG 요소에는 적용되지 않는다.
+쓸 수 있는 건 SMIL(<animate>)뿐이다.
 
-그래서 web/dice.js 가 하던 일을 뒤집었다. 브라우저에서는 면을 3D 공간에
-세워 두고 CSS 가 굴리지만, 여기서는 서버가 회전 각 프레임마다 면을 미리
-정사영해 두고 SMIL 이 그 좌표들 사이를 이어 준다.
-결과는 같다 ─ 면이 실제로 넘어가는 다면체가 스크립트 없이 굴러간다.
+그래서 web/dice.js와 반대 방식을 쓴다. 브라우저에서는 면을 3D 공간에
+배치하고 CSS가 회전시키지만, 여기서는 서버가 프레임마다 회전한 면을 미리
+정사영해 두고 SMIL이 그 좌표 사이를 보간한다.
+결과는 같다. 면이 실제로 넘어가는 다면체가 스크립트 없이 굴러간다.
 
-볼록 다면체라서 앞면끼리는 화면에서 겹치지 않는다. 그래서 깊이 정렬이
-필요 없고, 뒤를 보는 면만 숨기면 된다. SMIL 은 그리는 순서를 못 바꾸므로
-이 성질이 없었다면 이 방식 자체가 불가능했다.
+볼록 다면체는 앞면끼리 화면에서 겹치지 않는다. 그래서 깊이 정렬이
+필요 없고, 뒤를 향하는 면만 숨기면 된다. SMIL로는 그리는 순서를 바꿀 수
+없으므로, 이 성질이 없었다면 이 방식은 쓸 수 없었다.
 """
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ def _norm(a: Vec) -> Vec:
 
 
 def _rotate(v: Vec, axis: Vec, ang: float) -> Vec:
-    """로드리게스 회전. 축은 단위벡터여야 한다."""
+    """로드리게스 회전 공식. 축은 단위 벡터여야 한다."""
     c, s = math.cos(ang), math.sin(ang)
     return _add(_add(_mul(v, c), _mul(_cross(axis, v), s)),
                 _mul(axis, _dot(axis, v) * (1 - c)))
@@ -78,7 +78,7 @@ def _icosahedron() -> tuple[list[Vec], list[list[int]]]:
 
 
 def _dodecahedron() -> tuple[list[Vec], list[list[int]]]:
-    """정이십면체의 쌍대. 꼭짓점 하나를 둘러싼 면 다섯의 중심이 오각형 한 장."""
+    """정이십면체의 쌍대. 꼭짓점 하나를 둘러싼 면 다섯 개의 중심이 오각형 면 하나가 된다."""
     iv, ifaces = _icosahedron()
     verts = [_norm(_mul(_add(_add(iv[f[0]], iv[f[1]]), iv[f[2]]), 1 / 3)) for f in ifaces]
     faces = [[fi for fi, f in enumerate(ifaces) if vi in f] for vi in range(len(iv))]
@@ -86,10 +86,10 @@ def _dodecahedron() -> tuple[list[Vec], list[list[int]]]:
 
 
 def _trapezohedron() -> tuple[list[Vec], list[list[int]]]:
-    """오각 트라페조헤드론(d10). 연 모양 면 열 장.
+    """오각 트라페조헤드론(d10). 연 모양 면 열 장으로 이루어져 있다.
 
-    꼭짓점 높이는 아무 값이나 되지 않는다. 연의 네 점이 한 평면에 놓이는
-    비율이 딱 하나 있어 그것을 이분법으로 찾는다.
+    꼭짓점 높이는 아무 값이나 쓸 수 없다. 연의 네 점이 한 평면 위에 놓이는
+    비율은 하나뿐이라 이분법으로 찾는다.
     """
     t = math.tau / 5
     c = 0.112
@@ -147,7 +147,7 @@ SIDES = tuple(sorted(_RAW))
 
 
 def _face_normal(verts: list[Vec], idxs: list[int]) -> Vec:
-    """바깥을 보는 법선. 볼록 다면체라 면 위 아무 점과 방향이 같아야 한다."""
+    """바깥을 향하는 법선. 볼록 다면체라서 면 위의 아무 점과 같은 방향이어야 한다."""
     pts = [verts[i] for i in idxs]
     n = _norm(_cross(_sub(pts[1], pts[0]), _sub(pts[2], pts[0])))
     mid = _mul(pts[0], 0)
@@ -158,8 +158,8 @@ def _face_normal(verts: list[Vec], idxs: list[int]) -> Vec:
 
 
 def _order(verts: list[Vec], idxs: list[int]) -> list[int]:
-    """면의 꼭짓점을 둘레 순서로 세운다. 삼각형은 상관없지만 사각형과
-    오각형은 순서가 틀리면 폴리곤이 나비처럼 접힌다."""
+    """면의 꼭짓점을 둘레 순서대로 정렬한다. 삼각형은 상관없지만 사각형과
+    오각형은 순서가 틀리면 다각형이 나비 모양으로 꼬인다."""
     n = _face_normal(verts, idxs)
     mid = _mul(verts[idxs[0]], 0)
     for i in idxs:
@@ -172,7 +172,7 @@ def _order(verts: list[Vec], idxs: list[int]) -> list[int]:
 
 
 def solid(sides: int) -> tuple[list[Vec], list[list[int]]]:
-    """0번 면이 정면(+Z)을 보도록 돌려 둔 다면체."""
+    """0번 면이 정면(+Z)을 향하도록 회전시킨 다면체."""
     raw_v, raw_f = _RAW[sides]
     verts = [_norm(v) for v in raw_v]
     faces = [_order(verts, f) for f in raw_f]
@@ -186,7 +186,7 @@ def solid(sides: int) -> tuple[list[Vec], list[list[int]]]:
 
 
 # ── 재질 ────────────────────────────────────────────────
-# web/dice.css 의 .mat-* 와 같은 값. 한쪽만 고치면 두 화면이 달라진다.
+# web/dice.css의 .mat-*와 같은 값이다. 한쪽만 고치면 두 결과물의 색이 달라진다.
 #              face(h, s, l0, l1)          edge(h, s, l0, l1)          ink
 MATERIALS: dict[str, tuple[tuple, tuple, str]] = {
     "onyx":   ((250, 14, 4, 15),  (44, 64, 33, 45),  "#f2cf79"),
@@ -201,8 +201,8 @@ LIGHT: Vec = _norm((-0.36, -0.72, 0.59))
 
 
 def _hsl(h: float, s: float, l: float) -> str:
-    """hsl → #rrggbb. SVG 는 hsl() 도 받지만 SMIL values 목록에서는
-    구형 렌더러가 헷갈려 해서 16진수로 못박는다."""
+    """hsl → #rrggbb. SVG는 hsl()도 지원하지만 SMIL values 목록에서는
+    오래된 렌더러가 제대로 처리하지 못해서 16진수로 쓴다."""
     s, l = s / 100.0, l / 100.0
     k = lambda n: (n + h / 30) % 12                                   # noqa: E731
     a = s * min(l, 1 - l)
@@ -225,21 +225,21 @@ def _esc(text: str) -> str:
 def render(sides: int, value, material: str = DEFAULT_MATERIAL,
            size: int = 160, frames: int = 22, turns: int = 2,
            duration: float = 1.25, seed: Optional[int] = None) -> str:
-    """주사위 한 알을 SVG 문자열로.
+    """주사위 하나를 SVG 문자열로 만든다.
 
-    value 는 멈췄을 때 정면(0번 면)에 뜨는 눈이다. 굴리는 동안에는
-    아무 숫자도 보이지 않는다 ─ 결과가 미리 새면 굴리는 의미가 없다.
+    value는 멈췄을 때 정면(0번 면)에 보이는 눈이다. 굴러가는 동안에는
+    숫자가 보이지 않는다. 결과가 미리 보이면 굴리는 의미가 없다.
     """
     if sides not in _RAW:
-        raise ValueError(f"없는 주사위: d{sides}")
+        raise ValueError(f"지원하지 않는 주사위: d{sides}")
     verts, faces = solid(sides)
     face_c, edge_c, ink = MATERIALS.get(material, MATERIALS[DEFAULT_MATERIAL])
 
     rng = random.Random(seed)
-    # 축은 화면 평면에 가깝게. Z 축으로 돌면 구르는 게 아니라 동전처럼 돈다.
+    # 축은 화면 평면에 가깝게 잡는다. Z축으로 돌면 구르는 게 아니라 동전처럼 돈다.
     th = rng.random() * math.tau
     axis = _norm((math.cos(th), math.sin(th), (rng.random() - 0.5) * 0.6))
-    # 남은 각도는 (1-t)² 로 줄어든다 ─ 마찰에 밀려 멈추는 모양.
+    # 남은 각도가 (1-t)²로 줄어든다. 마찰 때문에 느려지며 멈추는 모양이다.
     start = turns * math.tau + rng.uniform(0.7, 5.5)
     steps = [start * (1 - i / (frames - 1)) ** 2 for i in range(frames)]
 
@@ -247,11 +247,11 @@ def render(sides: int, value, material: str = DEFAULT_MATERIAL,
     cx = cy = size / 2
     hop = size * 0.11
 
-    # 프레임마다 모든 꼭짓점을 미리 돌려 둔다.
+    # 프레임마다 모든 꼭짓점을 미리 회전시켜 둔다.
     posed = [[_rotate(v, axis, a) for v in verts] for a in steps]
 
     def pts(frame: list[Vec], idxs: list[int]) -> str:
-        # y 는 화면에서 아래로 자라므로 뒤집는다.
+        # 화면에서는 y가 아래로 커지므로 부호를 뒤집는다.
         return " ".join(f"{cx + frame[i][0] * R:.1f},{cy - frame[i][1] * R:.1f}"
                         for i in idxs)
 
@@ -263,7 +263,7 @@ def render(sides: int, value, material: str = DEFAULT_MATERIAL,
             n = _face_normal(frame, idxs)
             seq.append(pts(frame, idxs))
             fills.append(_shade(face_c, max(0.0, _dot(n, LIGHT))))
-            # 볼록이라 앞면끼리는 안 겹친다. 뒤를 보는 면만 지우면 끝.
+            # 볼록 다면체라 앞면끼리는 겹치지 않는다. 뒤를 향하는 면만 숨기면 된다.
             shows.append("1" if n[2] > 0 else "0")
         stroke = _shade(edge_c, 0.55)
         body.append(
@@ -277,13 +277,13 @@ def render(sides: int, value, material: str = DEFAULT_MATERIAL,
             f' calcMode="discrete" keyTimes="{times}" values="{";".join(shows)}"/>'
             f"</polygon>")
 
-    # 던져 올렸다 떨어지는 호. 도형 전체를 통째로 움직인다.
+    # 던져 올렸다 떨어지는 궤적. 도형 전체를 함께 움직인다.
     arc = [(0, 0), (0.10, -0.56), (0.30, -1.0), (0.50, -0.77),
            (0.66, -0.27), (0.72, 0), (0.81, -0.17), (0.90, 0), (1.0, 0)]
     hop_t = ";".join(f"{t:.4f}" for t, _ in arc)
     hop_v = ";".join(f"0,{y * hop:.1f}" for _, y in arc)
 
-    # 눈은 끝에서만 뜬다. 굴리는 내내 아무것도 안 보여야 한다.
+    # 눈은 마지막에만 보인다. 굴러가는 동안에는 아무것도 보이면 안 된다.
     reveal = f"{max(0.0, 1 - 0.12):.4f}"
     font = size * (0.30 if len(str(value)) < 3 else 0.22)
     return (
@@ -303,7 +303,7 @@ def render(sides: int, value, material: str = DEFAULT_MATERIAL,
 
 
 def percentile(value: int, **kw) -> tuple[str, str]:
-    """백분율 한 판은 십면체 두 알. 00+0 은 관례대로 100 으로 읽는다."""
+    """백분율 굴림은 십면체 두 개로 한다. 00과 0은 관례대로 100으로 읽는다."""
     n = int(value) % 100
     tens = f"{n // 10 * 10:02d}"
     return render(10, tens, **kw), render(10, str(n % 10), **kw)

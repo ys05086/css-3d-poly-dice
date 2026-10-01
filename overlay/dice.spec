@@ -1,25 +1,25 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""주사위 오버레이를 혼자 도는 프로그램으로 묶는다.
+"""주사위 오버레이를 독립 실행 프로그램으로 빌드하는 설정.
 
     python overlay\\build.py
 
-만들어지는 것은 dist/주사위/ 한 폴더다. 통째로 옮겨도 돌아간다 ─
-파이썬도, 가상환경도, 이 저장소도 필요 없다. 화면(WebView2)만은 윈도우에
-이미 들어 있는 걸 쓴다.
+결과물은 dist/주사위/ 폴더 하나다. 폴더째 옮겨도 실행된다.
+파이썬, 가상 환경, 이 저장소 모두 필요 없다. 화면(WebView2)만은 윈도우에
+기본으로 들어 있는 것을 쓴다.
 
-한 파일(onefile)로 묶지 않는 이유: pythonnet 이 .NET 어셈블리를 실행 중에
-찾아 올리는데, 매번 임시 폴더에 풀었다 지우는 방식과 잘 맞지 않는다.
-그리고 폴더 쪽이 뜨는 속도가 눈에 띄게 빠르다 ─ 트레이에 얹어 두는
-프로그램이라 뜨는 속도가 곧 인상이다.
+단일 파일(onefile)로 빌드하지 않는 이유: pythonnet은 실행 중에 .NET
+어셈블리를 찾아 불러오는데, 실행할 때마다 임시 폴더에 풀었다가 지우는
+방식과 잘 맞지 않는다. 또 폴더 방식이 눈에 띄게 빨리 실행된다. 트레이에
+상주하는 프로그램이라 실행 속도가 사용감에 큰 영향을 준다.
 """
 from pathlib import Path
 
-ROOT = Path(SPECPATH).parent          # noqa: F821  ─ SPECPATH 는 PyInstaller 가 넣어 준다
+ROOT = Path(SPECPATH).parent          # noqa: F821  (SPECPATH는 PyInstaller가 넣어 준다)
 
-# 묶인 안에서도 자리가 그대로여야 한다. pywebview 는 화면 파일이 있는 폴더를
-# 뿌리로 삼아 제 HTTP 서버로 내려주므로, 주사위가 같은 폴더에 없으면
-# 404 로 빠지고 알약만 덩그러니 남는다.
-# main.py 의 _root() 가 묶인 뒤에는 이 'web' 을 바라본다.
+# 빌드한 뒤에도 파일 배치가 그대로여야 한다. pywebview는 화면 파일이 있는 폴더를
+# 루트로 삼아 내장 HTTP 서버로 제공하므로, 주사위 파일이 같은 폴더에 없으면
+# 404가 나서 주사위 없이 빈 알약만 남는다.
+# 빌드한 뒤에는 main.py의 _root()가 이 'web' 폴더를 가리킨다.
 PAGE = ["overlay.html", "overlay.css", "overlay.js", "dice.css", "dice.js"]
 
 a = Analysis(                                                    # noqa: F821
@@ -27,7 +27,7 @@ a = Analysis(                                                    # noqa: F821
     pathex=[],
     binaries=[],
     datas=[(str(ROOT / "web" / name), "web") for name in PAGE],
-    # pystray 는 쓸 뒤판을 실행 중에 고른다. 훑어서는 안 보인다.
+    # pystray는 사용할 백엔드를 실행 중에 고른다. 정적 분석으로는 찾을 수 없다.
     hiddenimports=["pystray._win32"],
     hookspath=[],
     runtime_hooks=[],
@@ -48,7 +48,7 @@ exe = EXE(                                                       # noqa: F821
     debug=False,
     strip=False,
     upx=False,
-    console=False,          # 트레이에 사는 프로그램이다. 검은 창이 뜨면 안 된다.
+    console=False,          # 트레이에 상주하는 프로그램이라 콘솔 창을 띄우지 않는다.
     icon=str(ROOT / "overlay" / "dice.ico"),
 )
 coll = COLLECT(                                                  # noqa: F821

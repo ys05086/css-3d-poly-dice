@@ -1,11 +1,11 @@
-/* 주사위 오버레이. 창이 곧 알약 하나다 ─ 창틀도 제목줄도 없다.
-   주사위 자체는 dice.css 가 그린다. */
+/* 주사위 오버레이. 창 전체가 알약 모양 하나이고, 창 테두리나 제목 표시줄이 없다.
+   주사위 자체는 dice.css가 그린다. */
 
 :root {
   color-scheme: dark;
   --a: var(--alpha, .94);
   --skin: rgba(22, 22, 32, var(--a));
-  --line: rgba(120, 120, 160, .30);   /* 설정 패널 내부 선 */
+  --line: rgba(120, 120, 160, .30);   /* 설정 패널 안쪽 선 */
   --rim: rgba(255, 255, 255, .05);    /* 알약 테두리. 거의 안 보여야 한다 */
   --text: #e7e7f2;
   --dim: #9a9ab2;
@@ -15,8 +15,8 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* .pill 의 display:flex 가 브라우저 기본 [hidden] 을 이긴다(특이도가 같아
-   뒤에 온 쪽이 이긴다). 못박아 둔다. */
+/* .pill의 display:flex가 브라우저 기본 [hidden] 스타일을 덮어쓴다(우선순위가
+   같아서 나중에 선언된 쪽이 적용된다). 그래서 강제로 지정해 둔다. */
 [hidden] { display: none !important; }
 
 html, body {
@@ -28,45 +28,45 @@ html, body {
   user-select: none;
   -webkit-user-select: none;
 }
-/* 위아래 여백은 주사위가 튀어 오를 자리다. 창 바깥은 진짜로 비어 있어
-   (main.py 의 clear_background) 넉넉히 둬도 보이지 않는다.
-   JS 의 MARGIN_X / MARGIN_Y 와 같은 값이어야 창 크기가 맞는다. */
+/* 위아래 여백은 주사위가 튀어 오를 공간이다. 이 영역은 실제로 비어 있어서
+   (main.py의 clear_background) 넉넉하게 잡아도 보이지 않는다.
+   JS의 MARGIN_X / MARGIN_Y와 같은 값이어야 창 크기가 맞는다. */
 body {
   padding: 34px 10px;
   display: flex; flex-direction: column; gap: 8px;
 }
-/* 설정을 펴면 아래는 패널이 채우므로 여백이 필요 없다. */
+/* 설정을 열면 아래쪽은 패널이 채우므로 여백이 필요 없다. */
 body.open { padding-bottom: 10px; }
 
 /* ── 알약 ──────────────────────────────────────────────── */
 .pill {
   flex: none;
-  align-self: flex-start;        /* 내용만큼만 차지한다. 창 폭을 여기서 잰다 */
+  align-self: flex-start;        /* 내용만큼만 차지한다. 창 너비를 여기서 잰다 */
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px 12px 16px;  /* 위아래를 넉넉히 ─ 주사위가 갇혀 보이면 안 된다 */
+  padding: 12px 14px 12px 16px;  /* 위아래를 넉넉하게. 주사위가 갇혀 보이면 안 된다 */
   border-radius: 999px;
   background: var(--skin);
-  /* 테두리는 평소에 거의 안 보인다. 밝은 고리가 창 밖으로 드러나면
-     오버레이가 아니라 '떠 있는 상자'로 보인다. */
+  /* 테두리는 평소에 거의 보이지 않게 한다. 밝은 테두리가 드러나면
+     오버레이가 아니라 떠 있는 상자처럼 보인다. */
   border: 1px solid var(--rim);
   box-shadow: 0 8px 26px -10px rgba(0, 0, 0, .85);
   transition: border-color .24s, box-shadow .34s;
   cursor: move;
 }
 
-/* 주사위는 손잡이가 아니다. 눌러야 구른다.
-   그리고 굴릴 때 위로 뜬다 ─ 알약이 잘라내지 않도록 넘침을 허용한다. */
+/* 주사위는 드래그 손잡이가 아니라 클릭하면 굴러가는 버튼이다.
+   굴릴 때 위로 튀어 오르므로 알약 밖으로 넘쳐도 잘리지 않게 한다. */
 .tray {
   display: inline-flex; gap: 7px; align-items: center;
   cursor: pointer; overflow: visible;
 }
 .tray .poly-die { cursor: pointer; }
-/* 수정치 주사위. 주된 주사위와 헷갈리지 않게 작고 흐리게, 한 칸 띄운다. */
+/* 수정치 주사위. 주 주사위와 헷갈리지 않게 작고 흐리게 그리고, 간격을 띄운다. */
 .tray .poly-die.side { opacity: .78; }
 .tray .poly-die.side:first-of-type { margin-left: 3px; }
-/* 대기 중인 주사위는 저 혼자 구르면 안 된다. */
+/* 대기 중인 주사위가 혼자 굴러가면 안 된다. */
 .pill.idle .tray .poly-die .ico,
 .pill.idle .tray .poly-die .spin { animation: none !important; }
 
@@ -88,7 +88,7 @@ body.open { padding-bottom: 10px; }
 .goal { color: var(--dim); font-size: 11px; }
 .verdict { margin-left: auto; font-weight: 600; font-size: 12px; padding-left: 6px; }
 
-/* 굴리는 동안은 아무것도 새지 않는다. */
+/* 굴리는 동안에는 결과를 전혀 보여 주지 않는다. */
 .pill.rolling .val,
 .pill.rolling .goal,
 .pill.rolling .verdict { opacity: 0; }
@@ -102,7 +102,7 @@ body.open { padding-bottom: 10px; }
 .pill.crit .verdict   { color: var(--good); }
 .pill.fumble .verdict { color: var(--bad); }
 
-/* 오른쪽 동그라미 */
+/* 오른쪽 동그란 설정 버튼 */
 .knob {
   flex: none;
   width: 26px;
@@ -118,10 +118,10 @@ body.open { padding-bottom: 10px; }
 .knob:hover { color: var(--text); border-color: rgba(160, 160, 210, .7); }
 
 /* ── 설정 ──────────────────────────────────────────────── */
-/* 설정은 제 너비를 갖는다. 창 너비를 알약과 나눠 쓰면, d100 을 고르거나
-   판정 이름을 길게 적어 알약이 넓어질 때마다 설정까지 같이 늘어난다 ─
-   단추가 줄을 바꿔 다시 앉는 게 눈에 거슬린다. 여기는 늘 같은 자리여야 한다.
-   JS 의 PANEL_W 와 같은 값이어야 창 크기가 맞는다. */
+/* 설정 패널은 고정 너비를 쓴다. 알약과 창 너비를 같이 쓰면, d100을 고르거나
+   판정 이름을 길게 써서 알약이 넓어질 때마다 설정 패널도 넓어지고 버튼
+   줄바꿈이 달라져서 눈에 거슬린다. 패널은 항상 같은 모양이어야 한다.
+   JS의 PANEL_W와 같은 값이어야 창 크기가 맞는다. */
 .panel {
   width: 360px;
   align-self: flex-start;
@@ -179,8 +179,11 @@ body.open { padding-bottom: 10px; }
 .row input[type="range"] { flex: 1; accent-color: #7c5cff; }
 .row b { font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; }
 .row.sw input { accent-color: #7c5cff; width: 15px; height: 15px; }
+/* 한국어 안내문은 어절 단위로 줄을 바꾼다. 기본값이면 단어 중간에서 끊긴다. */
+.note, .warn { word-break: keep-all; }
 .note { font-size: 11px; color: var(--dim); line-height: 1.6; }
-/* 골라 둔 규칙이 지금 설정으로는 돌지 않을 때. 조용히 멎는 것보다 낫다. */
+/* 고른 규칙이 지금 설정으로는 동작하지 않을 때 보여 주는 경고.
+   아무 표시 없이 동작하지 않는 것보다 낫다. */
 .warn {
   font-size: 11px; line-height: 1.55; margin: -6px 0 14px;
   padding: 7px 10px; border-radius: 8px;
@@ -189,7 +192,7 @@ body.open { padding-bottom: 10px; }
   color: #f0d79a;
 }
 .warn b { color: #ffe9b8; }
-/* 값 위에 굴림 근거가 얹혀 있을 때만 손 모양으로 알린다. */
+/* 결과 숫자에 계산 과정이 들어 있을 때만 커서 모양으로 알린다. */
 .val[title]:not([title=""]) { cursor: help; }
 .note b { color: var(--text); font-weight: 600; }
 

@@ -1,16 +1,16 @@
-/* 3D 주사위. dice.js 와 짝이며 앱에 묶여 있지 않다 ─ 이 파일과 dice.js 만
-   가져가면 아무 페이지에서나 쓸 수 있다.
-   바깥 변수를 하나도 참조하지 않으므로 색 테마와도 독립이다. */
+/* 3D 주사위 스타일. dice.js와 함께 쓰며 특정 앱에 의존하지 않는다.
+   이 파일과 dice.js만 있으면 어떤 페이지에서든 쓸 수 있다.
+   외부 CSS 변수를 참조하지 않으므로 페이지의 색 테마와도 무관하다. */
 
-/* 퍼지 주사위(페이트) 전용 육면체. 실제로 육면체라서 여섯 면에
-   ＋／０／－ 가 박혀 있고, 구르는 동안 그 면들이 스쳐 지나간다.
-   다른 주사위와 같은 껍데기(.poly-die > .ico)를 쓴다 ─ 그래야 원근과
-   구르기가 똑같이 걸린다. 전에는 이것만 원근 밖에 있어서 납작했다. */
+/* 육면체. 퍼지 주사위와 일반 d6에 쓴다. 실제 정육면체라서 구르는 동안
+   다른 면이 스쳐 지나간다.
+   다른 주사위와 같은 구조(.poly-die > .ico)를 써야 원근과 회전이 똑같이
+   적용된다. 예전에는 육면체만 원근 밖에 있어서 납작해 보였다. */
 .poly-die.die6 {
   --size: 26px;
-  /* 상자 안에서 육면체가 차지하는 몫. 1 이면 상자를 꽉 채워 다른
-     주사위 옆에서 유난히 덩치가 커 보인다. 다면체는 구에 내접해
-     저절로 여백이 남지만 육면체는 안 그렇다. */
+  /* 상자 안에서 육면체가 차지하는 비율. 1이면 상자를 꽉 채워서 다른
+     주사위 옆에 두었을 때 유난히 커 보인다. 다면체는 구에 내접해서
+     자연스럽게 여백이 생기지만 육면체는 그렇지 않다. */
   --fill: .64;
   --half: calc(var(--size) * var(--fill) / 2);
 }
@@ -26,7 +26,7 @@
   backface-visibility: hidden;
   border-radius: 5px;
   transition: border-color .28s ease;
-  /* 재질 변수를 그대로 탄다. 참나무 재질이면 참나무 색이 나온다. */
+  /* 재질 변수를 그대로 쓴다. 참나무 재질이면 참나무 색이 나온다. */
   color: var(--ink);
   border: 1px solid hsl(var(--edge-h) var(--edge-s) var(--edge-l0));
   background: linear-gradient(145deg,
@@ -40,12 +40,12 @@
 .die6 .top    { transform: rotateX(90deg)  translateZ(var(--half)); }
 .die6 .bottom { transform: rotateX(-90deg) translateZ(var(--half)); }
 
-/* 정이십면체. 삼각면 스무 장이 실제로 3D 공간에 서 있어서
-   구를 때 뒤로 넘어간 면은 사라지고 새 면이 돌아 나온다.
-   면의 위치·방향·밝기는 전부 dice.js 가 계산해서 인라인으로 박는다. */
-/* 재질은 전부 변수다. 아래 .mat-* 가 이 값들만 갈아 끼운다.
-   면 색은 hsl 로 쪼개 둔다 ─ l0 은 그늘진 면, l0+l1 은 빛을 정면으로
-   받는 면. 이 폭이 넓을수록 금속처럼, 좁을수록 돌처럼 보인다. */
+/* 다면체 공통. 면이 실제로 3D 공간에 배치되어 있어서 구를 때 뒤로
+   넘어간 면은 사라지고 새 면이 돌아 나온다.
+   면의 위치·방향·밝기는 모두 dice.js가 계산해서 인라인 스타일로 넣는다. */
+/* 재질은 모두 CSS 변수로 정한다. 아래 .mat-* 클래스는 이 값만 바꾼다.
+   면 색은 hsl로 나눠 둔다. l0은 그늘진 면, l0+l1은 빛을 정면으로 받는
+   면의 밝기다. 이 차이가 클수록 금속처럼, 작을수록 돌처럼 보인다. */
 .poly-die {
   --size: 44px;
   --face-h: 248; --face-s: 22%; --face-l0:  9%; --face-l1: 26%;
@@ -53,21 +53,21 @@
   --ink: #e9e9f6;
   --ink-shade: rgba(0, 0, 0, .55);
   --rim: .915;     /* 안쪽 면 축소율 = 모서리 두께 */
-  --sheen: .07;    /* 면에 스치는 빛 */
+  --sheen: .07;    /* 면에 비치는 빛 */
   --shade: .18;    /* 면에 지는 그늘 */
-  --body: 1;       /* 1 이면 불투명, 낮추면 속이 비친다 */
-  --texture: none; /* 면 위에 한 겹 더 까는 무늬. 결·구름·하이라이트 */
-  /* 모양은 dice.js 가 재서 인라인으로 넣는다. 아래는 그냥 안전망. */
+  --body: 1;       /* 1이면 불투명, 낮추면 속이 비친다 */
+  --texture: none; /* 면 위에 한 겹 더 까는 무늬(결, 구름, 하이라이트) */
+  /* 모양은 dice.js가 계산해서 인라인으로 넣는다. 아래 값은 기본값이다. */
   --outline: polygon(50% 0%, 0% 100%, 100% 100%);
   --pivot: 66.667%;
   position: relative;
   width: var(--size);
   height: var(--size);
   flex: none;
-  /* 원근은 돌지 않는 껍데기에 건다. 회전하는 쪽에 걸면 소실점이 같이 돌아
-     주사위가 아니라 방이 도는 것처럼 보인다. */
+  /* 원근은 회전하지 않는 바깥 요소에 건다. 회전하는 요소에 걸면 소실점까지
+     함께 돌아서 주사위가 아니라 공간이 도는 것처럼 보인다. */
   perspective: calc(var(--size) * 3.6);
-  --near: calc(var(--size) * .75);  /* 꼭대기에서 얼마나 다가오는가 */
+  --near: calc(var(--size) * .75);  /* 가장 높이 떴을 때 화면 쪽으로 다가오는 거리 */
 }
 .poly-die .ico {
   position: absolute;
@@ -76,11 +76,11 @@
   animation-name: tumble;
   animation-duration: var(--dur, 1s);
   animation-delay: var(--delay, 0ms);
-  /* linear 이어야 한다. 위 @keyframes tumble 주석 참고. */
+  /* 반드시 linear여야 한다. 아래 @keyframes tumble 주석 참고. */
   animation-timing-function: linear;
   animation-fill-mode: both;
 }
-/* 제 축으로 도는 속층. d10 만 쓴다 ─ 나머지는 이 겹이 아예 없다. */
+/* 자기 축으로 도는 안쪽 층. d10에만 있다. */
 .poly-die .spin {
   position: absolute;
   inset: 0;
@@ -98,17 +98,17 @@
   transform-origin: 50% var(--pivot);
   backface-visibility: hidden;
   clip-path: var(--outline);
-  /* 이 배경이 모서리로 남는다. clip-path 가 border 를 잘라내므로
-     테두리를 그리려면 면을 두 겹으로 깔고 바깥을 남기는 수밖에 없다.
-     --lit 은 법선과 고정 광원의 각도. 빛을 받는 면일수록 모서리가
-     밝게 서는데, 실제로 깎은 주사위가 그렇게 보인다. */
+  /* 이 배경이 모서리가 된다. clip-path가 border를 잘라 내므로
+     테두리를 그리려면 면을 두 겹으로 깔고 바깥쪽을 남기는 수밖에 없다.
+     --lit은 법선과 고정 광원 사이의 각도다. 빛을 받는 면일수록 모서리가
+     밝아지는데, 실제로 깎아 만든 주사위도 그렇게 보인다. */
   background: hsl(var(--edge-h) var(--edge-s)
                   calc(var(--edge-l0) + var(--lit, 0) * var(--edge-l1)));
-  /* 멈춘 뒤 판정 색이 붙을 때 확 켜지지 않고 번져 들어오도록. */
+  /* 멈춘 뒤 결과 색이 붙을 때 한 번에 바뀌지 않고 서서히 바뀌도록. */
   transition: background-color .28s ease;
 }
-/* 안쪽 면. 무게중심 기준으로 줄여 모든 변에 테두리를 고르게 남긴다.
-   ::after 가 아니라 ::before 여야 숫자보다 먼저 칠해진다. */
+/* 안쪽 면. 무게중심을 기준으로 줄여서 모든 변에 같은 두께의 테두리를 남긴다.
+   ::after가 아니라 ::before여야 숫자보다 먼저 그려진다. */
 .poly-die .face::before {
   content: "";
   position: absolute;
@@ -117,8 +117,8 @@
   transform: scale(var(--rim));
   transform-origin: 50% var(--pivot);
   opacity: var(--body);
-  /* 그라디언트는 background-image, hsl 은 background-color 로 들어간다.
-     그래서 색만 따로 번지게 할 수 있다. */
+  /* 그라디언트는 background-image로, hsl 색은 background-color로 들어간다.
+     그래서 색만 따로 전환 효과를 줄 수 있다. */
   background:
     var(--texture),
     linear-gradient(158deg,
@@ -141,53 +141,53 @@
 }
 
 /* ── 주사위 재질 ─────────────────────────────────────────
-   규칙 체계마다 다른 주사위를 쥐여 준다. 값만 갈아 끼우는 거라
-   새 재질을 추가하는 데 드는 건 이 블록 한 덩이가 전부다. */
+   변수 값만 바꾸는 방식이라 새 재질을 추가할 때는 이런 블록 하나만
+   추가하면 된다. */
 
-/* 강철 ─ D&D. 명암 폭이 넓고 모서리가 날카롭게 선다. */
+/* 강철. 명암 차이가 크고 모서리가 또렷하다. */
 .poly-die.mat-steel {
   --face-h: 215; --face-s:  9%; --face-l0: 15%; --face-l1: 42%;
   --edge-h: 210; --edge-s: 14%; --edge-l0: 40%; --edge-l1: 52%;
   --ink: #f3f7fc; --rim: .93; --sheen: .17; --shade: .26;
 }
-/* 상아 ─ 크툴루. 밝은 몸에 먹으로 눈금을 넣은 골동품. */
+/* 상아. 밝은 바탕에 먹색 숫자를 새긴 골동품 느낌. */
 .poly-die.mat-ivory {
   --face-h: 40; --face-s: 26%; --face-l0: 54%; --face-l1: 30%;
   --edge-h: 36; --edge-s: 22%; --edge-l0: 66%; --edge-l1: 24%;
   --ink: #3b2c19; --ink-shade: rgba(255, 255, 255, .45);
   --rim: .9; --sheen: .05; --shade: .11;
 }
-/* 네온 아크릴. 속이 비치고 눈금이 발광한다. */
+/* 네온 아크릴. 속이 비치고 숫자가 빛난다. */
 .poly-die.mat-neon {
   --face-h: 286; --face-s: 58%; --face-l0: 13%; --face-l1: 30%;
   --edge-h: 300; --edge-s: 88%; --edge-l0: 44%; --edge-l1: 38%;
   --ink: #8ffaff; --ink-shade: rgba(0, 240, 255, .55);
   --rim: .9; --sheen: .13; --shade: .2; --body: .74;
 }
-/* 아크릴은 뒷면이 비쳐야 아크릴이다. 뒤집힌 눈금까지 같이 비친다. */
+/* 아크릴은 뒷면이 비쳐 보여야 자연스럽다. 뒤집힌 숫자까지 함께 비친다. */
 .poly-die.mat-neon .face { backface-visibility: visible; }
 
-/* 참나무 ─ 페이트. 대비가 낮고 따뜻하다. */
+/* 참나무. 대비가 낮고 따뜻한 색. */
 .poly-die.mat-oak {
   --face-h: 26; --face-s: 34%; --face-l0: 20%; --face-l1: 24%;
   --edge-h: 30; --edge-s: 38%; --edge-l0: 36%; --edge-l1: 28%;
   --ink: #f5e2c2; --rim: .91; --sheen: .05; --shade: .14;
 }
 
-/* 흑요석에 금테. 몸을 거의 검게 눌러야 금이 산다 ─ 회색쯤에서 멈추면
-   금테가 그냥 노란 줄로 보인다. 테는 얇을수록 고급스럽다. */
+/* 흑요석에 금테. 몸체를 거의 검게 눌러야 금색이 살아난다. 회색에 가까우면
+   금테가 그냥 노란 선처럼 보인다. 테두리는 얇을수록 고급스럽다. */
 .poly-die.mat-onyx {
   --face-h: 250; --face-s: 14%; --face-l0:  4%; --face-l1: 15%;
   --edge-h:  44; --edge-s: 64%; --edge-l0: 33%; --edge-l1: 45%;
   --ink: #f2cf79; --ink-shade: rgba(0, 0, 0, .75);
   --rim: .938; --sheen: .13; --shade: .32;
-  /* 흑요석은 유리질이라 면마다 빛 한 점이 다른 자리에 맺힌다. */
+  /* 흑요석은 유리질이라 면마다 다른 위치에 하이라이트가 하나씩 맺힌다. */
   --texture: radial-gradient(ellipse 58% 48% at calc(var(--grain, 0) * 68% + 16%) 26%,
              rgba(255, 255, 255, .11), transparent 62%);
 }
 
-/* 대리석. 결 하나와 구름 둘을 --grain 으로 밀어 두면 스무 면이 전부
-   다른 무늬가 된다. 같은 무늬를 스무 번 찍으면 벽지처럼 보인다. */
+/* 대리석. 결 하나와 구름 두 개를 --grain으로 옮겨서 면마다 다른 무늬를 만든다.
+   같은 무늬를 스무 번 찍으면 벽지처럼 보인다. */
 .poly-die.mat-marble {
   --face-h: 220; --face-s:  9%; --face-l0: 60%; --face-l1: 24%;
   --edge-h: 214; --edge-s: 11%; --edge-l0: 73%; --edge-l1: 19%;
@@ -203,24 +203,25 @@
       rgba(255, 255, 255, .16), transparent 66%);
 }
 
-/* 구르기. 축 하나(--ax,--ay,--az)로만 돌고 각도만 자란다.
-   축·바퀴·높이·속도는 JS 가 주사위마다 새로 뽑으므로 넷이 한꺼번에
-   굴러도 전부 다르게 구른다.
+/* 구르기. 축 하나(--ax, --ay, --az)로만 회전하고 각도만 변한다.
+   축, 회전 수, 높이, 속도는 JS가 주사위마다 새로 정하므로 여러 개를
+   동시에 굴려도 모두 다르게 구른다.
 
-   타이밍 함수는 반드시 linear 여야 한다. 키프레임 사이마다 가감속이
-   걸리면 구간마다 빨라졌다 느려져서 딱딱 끊겨 보인다.
-   감속은 각도 분포에 넣었다 ─ 1-(1-t)² 로, 던진 주사위가 마찰에 밀려
-   느려지는 모양이다. 구간을 여덟으로 쪼개 곡선처럼 보이게 한다. */
-/* --turn 은 '남은 각도'다. 시작 각도에서 0 으로 풀린다.
-   0 에서 시작해 0 으로 끝내면 첫 프레임에 결과 면이 정면으로 서서
-   던지기도 전에 답이 보인다. 시작을 360 의 배수가 아닌 각도로 두면
-   아무 면이나 앞에 오고, 끝에서만 결과가 정면에 선다.
-   남은 각도는 (1-t)² 로 줄어든다 ─ 마찰에 밀려 멈추는 모양. */
+   타이밍 함수는 반드시 linear여야 한다. 키프레임 구간마다 가감속이
+   걸리면 구간마다 빨라졌다 느려져서 움직임이 끊겨 보인다.
+   감속은 각도 값 자체에 넣었다. 남은 각도가 (1-t)²로 줄어드는데, 던진
+   주사위가 마찰 때문에 느려지는 모양이다. 구간을 여러 개로 나눠 곡선처럼
+   보이게 한다.
+
+   --turn은 '남은 회전 각도'다. 시작 각도에서 0으로 줄어든다.
+   0에서 시작해 0으로 끝나면 첫 프레임에 결과 면이 정면에 있어서
+   던지기도 전에 결과가 보인다. 시작 각도를 360의 배수가 아닌 값으로 두면
+   처음에는 아무 면이나 앞에 오고, 마지막에만 결과 면이 정면에 온다. */
 @keyframes tumble {
-  /* ── 올라간다. 30% 에서 꼭대기 ── */
-  /* opacity 는 여기 절대 쓰지 말 것. 1 미만이면 브라우저가 요소를 한 겹으로
-     합성해야 해서 preserve-3d 가 flat 으로 강등되고, 주사위가 통째로
-     납작해진다. 첫 프레임 유출은 --turn 시작 각도로 이미 막혀 있다. */
+  /* ── 올라가는 구간. 30%에서 가장 높다 ── */
+  /* opacity는 여기에 절대 쓰지 말 것. 1보다 작으면 브라우저가 요소를 한 장으로
+     합성해야 해서 preserve-3d가 flat으로 바뀌고, 주사위가 통째로 납작해진다.
+     첫 프레임에 결과가 보이는 문제는 --turn 시작 각도로 이미 막았다. */
   0% {
     transform: translateY(0) translateZ(0) scale(.94)
                rotate3d(var(--ax), var(--ay), var(--az), var(--turn));
@@ -233,12 +234,12 @@
     transform: translateY(calc(var(--hop) * -.889)) translateZ(calc(var(--near) * .889)) scale(1)
                rotate3d(var(--ax), var(--ay), var(--az), calc(var(--turn) * .64));
   }
-  /* 꼭대기이자 제일 가까운 지점. 커지는 건 scale 이 아니라 원근이 하는 일이다. */
+  /* 가장 높고 화면에 가장 가까운 지점. 커 보이는 건 scale이 아니라 원근 효과다. */
   30% {
     transform: translateY(calc(var(--hop) * -1)) translateZ(var(--near)) scale(1)
                rotate3d(var(--ax), var(--ay), var(--az), calc(var(--turn) * .49));
   }
-  /* ── 떨어진다. 올라갈 때보다 길게 ─ 그래야 무게가 생긴다 ── */
+  /* ── 떨어지는 구간. 올라갈 때보다 길게 잡아야 무게감이 생긴다 ── */
   42% {
     transform: translateY(calc(var(--hop) * -.918)) translateZ(calc(var(--near) * .918)) scale(1)
                rotate3d(var(--ax), var(--ay), var(--az), calc(var(--turn) * .3364));
@@ -251,12 +252,12 @@
     transform: translateY(calc(var(--hop) * -.265)) translateZ(calc(var(--near) * .265)) scale(1)
                rotate3d(var(--ax), var(--ay), var(--az), calc(var(--turn) * .1156));
   }
-  /* 첫 착지. 눌린다. */
+  /* 첫 착지. 살짝 눌린다. */
   72% {
     transform: translateY(0) translateZ(0) scale(.96)
                rotate3d(var(--ax), var(--ay), var(--az), calc(var(--turn) * .0784));
   }
-  /* 튀어 오른다. 처음 높이의 17%. */
+  /* 다시 튀어 오른다. 처음 높이의 17%. */
   81% {
     transform: translateY(calc(var(--hop) * -.17)) translateZ(calc(var(--near) * .17)) scale(1.01)
                rotate3d(var(--ax), var(--ay), var(--az), calc(var(--turn) * .0361));
@@ -269,16 +270,16 @@
     transform: translateY(calc(var(--hop) * -.05)) translateZ(calc(var(--near) * .05)) scale(1.002)
                rotate3d(var(--ax), var(--ay), var(--az), calc(var(--turn) * .0025));
   }
-  /* 여기서만 결과 면이 정면에 선다. */
+  /* 이 시점에만 결과 면이 정면을 향한다. */
   100% {
     transform: translateY(0) translateZ(0) scale(1)
                rotate3d(var(--ax), var(--ay), var(--az), 0deg);
   }
 }
 
-/* 십면체는 제 축으로도 돈다. 진짜 d10 은 던지면 팽이처럼 한참 돌다 선다.
-   겉(tumble)과 따로 걸어야 둘이 겹쳐서 그 느낌이 난다.
-   여기도 끝이 0 이라 결과 면은 그대로 정면을 지킨다. */
+/* 십면체는 자기 축으로도 돈다. 실제 d10은 던지면 팽이처럼 한참 돌다가 멈춘다.
+   바깥 회전(tumble)과 따로 걸어야 두 회전이 겹쳐서 그런 느낌이 난다.
+   여기도 마지막 값이 0이라 결과 면은 정면을 그대로 유지한다. */
 @keyframes polespin {
   0%   { transform: rotate3d(var(--px), var(--py), var(--pz), var(--pturn)); }
   20%  { transform: rotate3d(var(--px), var(--py), var(--pz), calc(var(--pturn) * .64)); }
@@ -294,9 +295,9 @@
 }
 
 /* ── 결과 색 ────────────────────────────────────────────
-   대성공·대실패처럼 결과를 색으로 알리고 싶을 때 쓰는 고리.
-   재질 위에 덧씌우되 면마다 구워 둔 밝기(--lit)는 그대로 살린다.
-   붙이는 건 쓰는 쪽의 몫이다 ─ dice.js 는 이 클래스를 건드리지 않는다. */
+   대성공·대실패 같은 결과를 색으로 표시하고 싶을 때 붙이는 클래스.
+   재질 위에 덮어씌우되 면마다 계산해 둔 밝기(--lit)는 그대로 유지한다.
+   클래스는 사용하는 쪽에서 붙인다. dice.js는 이 클래스를 건드리지 않는다. */
 .poly-die.tone-good .face { background: hsl(158 48% calc(22% + var(--lit, 0) * 46%)); }
 .poly-die.tone-good .face::before {
   background: linear-gradient(158deg, rgba(255, 255, 255, .07), rgba(0, 0, 0, .18)),

@@ -8,9 +8,9 @@
 </head>
 <body>
 
-<!-- 오버레이 전체가 이 알약 하나다. 창틀이 없고 이게 곧 창이다.
-     어디를 잡아도 끌린다. 끌지 않고 톡 누르면 그게 굴림이다 ─ 어느 쪽인지는
-     손가락이 움직인 거리로 가른다(overlay.js 의 DRAG_SLOP). -->
+<!-- 오버레이 전체가 이 알약 하나다. 창 테두리 없이 알약이 곧 창이다.
+     어디를 잡아도 드래그할 수 있고, 드래그하지 않고 클릭하면 굴린다.
+     둘은 포인터가 움직인 거리로 구분한다(overlay.js의 DRAG_SLOP). -->
 <div id="pill" class="pill">
   <span id="tray" class="tray"></span>
 
@@ -24,7 +24,7 @@
   <button id="btn-cfg" class="knob" title="설정">⚙</button>
 </div>
 
-<!-- 설정. 열면 창이 늘어난다. -->
+<!-- 설정 패널. 열면 창이 커진다. -->
 <div id="panel" class="panel" hidden>
   <div class="tabs">
     <button class="tab active" data-tab="dice">주사위</button>
@@ -44,29 +44,29 @@
     <label class="row"><span>하한</span>
       <input id="f-floor" type="number" min="-20" max="20" placeholder="없음"></label>
 
-    <div class="lab">대성공·대실패</div>
+    <div class="lab">대성공·대실패 기준</div>
     <div id="pick-crit" class="picks"></div>
-    <!-- '숫자' 는 목표가 있어야 잰다. 목표를 안 넣으면 아무것도 안 뜨는데,
-         그게 고장으로 보인다. 그럴 때만 여기가 켜진다. -->
+    <!-- '목표 차이' 기준은 목표가 있어야 판정할 수 있다. 목표를 입력하지 않으면
+         아무것도 표시되지 않아서 고장처럼 보이므로, 그럴 때만 이 안내를 띄운다. -->
     <p id="crit-warn" class="warn" hidden>
-      <b>숫자</b>는 목표와의 차이로 재므로 <b>목표</b>가 있어야 합니다.
-      지금은 성공·실패도 뜨지 않습니다.
+      <b>목표 차이</b> 기준은 <b>목표</b>가 있어야 판정할 수 있습니다.
+      지금은 성공·실패도 표시되지 않습니다.
     </p>
 
     <div class="lab">수정치 주사위</div>
     <div id="pick-extra" class="picks"></div>
     <p class="note">
-      눌러서 더하고, 오른쪽 단추로 뺍니다. 굴린 값이 합에 더해집니다.<br>
-      목표를 비우면 판정 없이 눈만 보여줍니다.<br>
-      <b>눈금</b>은 주사위 눈이 정합니다 — 수정치가 아무리 커도 d20 이 1이면
-      대실패입니다(D&amp;D 공격 굴림).
-      <b>숫자</b>는 목표와의 차이가 정합니다 — 10 이상 벌어지면 대성공·대실패이고,
-      목표가 없으면 아무것도 정하지 않습니다.<br>
-      <b>하한</b>은 보이는 숫자만 올립니다. 판정은 원래 합으로 합니다 ─
-      안 그러면 하한 때문에 대실패가 영영 안 뜹니다.<br>
-      굴림이 어떻게 나왔는지는 <b>숫자 위에 커서를 올리면</b> 나옵니다.<br>
-      d100 은 백분율이라 <b>낮을수록</b> 성공(≤ 목표%)이고 수정치도 하한도 받지 않습니다.
-      나머지는 <b>높을수록</b> 성공(≥ DC)입니다.
+      수정치 주사위는 클릭하면 추가되고 우클릭하면 빠집니다. 굴린 값은 합계에 더해집니다.<br>
+      목표를 비워 두면 판정 없이 굴린 값만 보여 줍니다.<br>
+      <b>주사위 눈</b> 기준에서는 주사위 눈이 대성공·대실패를 정합니다. 수정치가 아무리 커도
+      d20에서 1이 나오면 대실패입니다(D&amp;D 공격 굴림 방식).
+      <b>목표 차이</b> 기준에서는 합계가 목표와 10 이상 차이 나면 대성공·대실패입니다.
+      목표가 없으면 판정하지 않습니다.<br>
+      <b>하한</b>은 화면에 보이는 숫자만 올립니다. 판정은 원래 합계로 합니다.
+      그렇지 않으면 하한 때문에 대실패가 나올 수 없게 됩니다.<br>
+      결과 <b>숫자에 마우스를 올리면</b> 계산 과정이 보입니다.<br>
+      d100은 백분율 굴림이라 <b>낮을수록</b> 성공(≤ 목표%)이고, 수정치와 하한이 적용되지 않습니다.
+      나머지 주사위는 <b>높을수록</b> 성공(≥ DC)입니다.
     </p>
   </section>
 
@@ -77,17 +77,17 @@
       <input id="f-size" type="range" min="30" max="72" step="2"><b id="n-size"></b></label>
     <label class="row"><span>불투명도</span>
       <input id="f-alpha" type="range" min="30" max="100" step="5"><b id="n-alpha"></b></label>
-    <label class="row sw"><span>항상 위에</span>
+    <label class="row sw"><span>항상 위에 표시</span>
       <input id="f-top" type="checkbox" checked></label>
   </section>
 
   <section id="p-log" class="pane" hidden>
-    <div class="lab">굴린 기록<button id="btn-clear" class="mini">비우기</button></div>
+    <div class="lab">굴림 기록<button id="btn-clear" class="mini">비우기</button></div>
     <div id="log" class="log"></div>
   </section>
 
   <div class="foot">
-    <span class="hint">1·2 키로도 굴립니다 · Esc 로 숨김</span>
+    <span class="hint">1·Space 굴리기 · 2 d20/d100 전환 · Esc 숨기기</span>
     <button id="btn-quit" class="mini danger">종료</button>
   </div>
 </div>
